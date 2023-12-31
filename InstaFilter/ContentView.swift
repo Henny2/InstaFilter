@@ -16,6 +16,15 @@ struct ContentView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var showingFilters = false
     
+    var filterDisabled: Bool {
+        if let processedImage {
+            return false
+        }
+        else {
+            return true
+        }
+    }
+    
     @AppStorage("filterCount") var filterCount = 0
     @Environment(\.requestReview) var requestReview
     
@@ -44,9 +53,11 @@ struct ContentView: View {
                     Text("Intensity")
                     Slider(value: $filterIntensity)
                         .onChange(of: filterIntensity, applyProcessing)
+                        .disabled(filterDisabled)
                 }
                 HStack {
                     Button("Change Filter", action: changeFilter)
+                        .disabled(filterDisabled)
                     Spacer()
                     
                     if let processedImage {
