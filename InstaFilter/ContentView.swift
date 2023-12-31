@@ -13,16 +13,42 @@ import SwiftUI
 struct ContentView: View {
     @State private var processedImage: Image?
     @State private var filterIntensity = 0.5
+    @State private var radiusFilter = 10.0
+    @State private var scaleFilter = 10.0
     @State private var selectedItem: PhotosPickerItem?
     @State private var showingFilters = false
     
-    var filterDisabled: Bool {
-        if let processedImage {
+    var filterSelectionDisabled: Bool {
+        if processedImage != nil {
             return false
         }
         else {
             return true
         }
+    }
+    
+    var radiusSliderDisabled: Bool {
+        let inputKeys = currentFilter.inputKeys
+        if inputKeys.contains(kCIInputRadiusKey) && processedImage != nil {
+            return false
+        }
+        return true
+    }
+    
+    var scaleSliderDisabled: Bool {
+        let inputKeys = currentFilter.inputKeys
+        if inputKeys.contains(kCIInputScaleKey) && processedImage != nil {
+            return false
+        }
+        return true
+    }
+    
+    var intensitySliderDisabled: Bool {
+        let inputKeys = currentFilter.inputKeys
+        if inputKeys.contains(kCIInputIntensityKey) && processedImage != nil {
+            return false
+        }
+        return true
     }
     
     @AppStorage("filterCount") var filterCount = 0
@@ -51,13 +77,25 @@ struct ContentView: View {
                 Spacer()
                 HStack{
                     Text("Intensity")
-                    Slider(value: $filterIntensity)
+                    Slider(value: $filterIntensity,  in: 0.0...1.0)
                         .onChange(of: filterIntensity, applyProcessing)
-                        .disabled(filterDisabled)
+                        .disabled(intensitySliderDisabled)
+                }
+                HStack{
+                    Text("Scale")
+                    Slider(value: $scaleFilter, in: 0.0...250.0)
+                        .onChange(of: scaleFilter, applyProcessing)
+                        .disabled(scaleSliderDisabled)
+                }
+                HStack{
+                    Text("Radius")
+                    Slider(value: $radiusFilter,  in: 0.0...100.0)
+                        .onChange(of: radiusFilter, applyProcessing)
+                        .disabled(radiusSliderDisabled)
                 }
                 HStack {
                     Button("Change Filter", action: changeFilter)
-                        .disabled(filterDisabled)
+                        .disabled(filterSelectionDisabled)
                     Spacer()
                     
                     if let processedImage {
@@ -95,19 +133,19 @@ struct ContentView: View {
             applyProcessing()
         }
     }
-    
+        
     func applyProcessing() {
         let inputKeys = currentFilter.inputKeys
         if inputKeys.contains(kCIInputIntensityKey) {
-            currentFilter.setValue(filterIntensity, forKey: kCIInputIntensityKey)
+            currentFilter.setValue(filterIntensity * 10, forKey: kCIInputIntensityKey)
         }
         
         if inputKeys.contains(kCIInputRadiusKey) {
-            currentFilter.setValue(filterIntensity * 100, forKey: kCIInputRadiusKey)
+            currentFilter.setValue(radiusFilter, forKey: kCIInputRadiusKey)
         }
         
         if inputKeys.contains(kCIInputScaleKey) {
-            currentFilter.setValue(filterIntensity * 10, forKey: kCIInputScaleKey)
+            currentFilter.setValue(scaleFilter * 10, forKey: kCIInputScaleKey)
         }
         
         guard let outputImage = currentFilter.outputImage else { return }
